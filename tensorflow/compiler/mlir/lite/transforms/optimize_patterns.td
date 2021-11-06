@@ -42,33 +42,33 @@ def NotFromQuantOpDifferentQuant : Constraint<CPred<"NotFromQuantOpDifferentQuan
 //===----------------------------------------------------------------------===//
 // Multi-pattern consisting of matching stand-alone convolution op followed by
 // activation op.
-multiclass FuseActFnIntoConvOpPat<dag ActFnOp, dag ActFnAttr> {
-  def : Pat<(ActFnOp (TFL_Conv2DOp:$conv_out $input, $filter, $bias,
-                                   $h_factor, $w_factor, TFL_AF_None,
-                                   $padding, $stride_h, $stride_w)),
-            (TFL_Conv2DOp $input, $filter, $bias,
-                          $h_factor, $w_factor, ActFnAttr,
-                          $padding, $stride_h, $stride_w),
-            [(HasOneUse $conv_out)]>;
-  def : Pat<(ActFnOp (TFL_DepthwiseConv2DOp:$conv_out $input, $filter, $bias,
-                                   $h_factor, $w_factor, TFL_AF_None,
-                                   $padding, $stride_h, $stride_w,
-                                   $multiplier)),
-            (TFL_DepthwiseConv2DOp $input, $filter, $bias,
-                                   $h_factor, $w_factor, ActFnAttr,
-                                   $padding, $stride_h, $stride_w,
-                                   $multiplier),
-            [(HasOneUse $conv_out)]>;
-}
+// multiclass FuseActFnIntoConvOpPat<dag ActFnOp, dag ActFnAttr> {
+//   def : Pat<(ActFnOp (TFL_Conv2DOp:$conv_out $input, $filter, $bias,
+//                                    $h_factor, $w_factor, TFL_AF_None,
+//                                    $padding, $stride_h, $stride_w)),
+//             (TFL_Conv2DOp $input, $filter, $bias,
+//                           $h_factor, $w_factor, ActFnAttr,
+//                           $padding, $stride_h, $stride_w),
+//             [(HasOneUse $conv_out)]>;
+//   def : Pat<(ActFnOp (TFL_DepthwiseConv2DOp:$conv_out $input, $filter, $bias,
+//                                    $h_factor, $w_factor, TFL_AF_None,
+//                                    $padding, $stride_h, $stride_w,
+//                                    $multiplier)),
+//             (TFL_DepthwiseConv2DOp $input, $filter, $bias,
+//                                    $h_factor, $w_factor, ActFnAttr,
+//                                    $padding, $stride_h, $stride_w,
+//                                    $multiplier),
+//             [(HasOneUse $conv_out)]>;
+// }
 
 // TODO(hinsu): Also fuse ops corresponding to SIGN_BIT fused
 // activation functions.
 // Currently we're not fusing tanh, sigmoid, hard_swish and other activations
 // those cannot be simply translated into clamping.
-foreach actFnPair = [[TFL_ReluOp, TFL_AF_Relu],
-                     [TFL_Relu6Op, TFL_AF_Relu6],
-                     [TFL_Relu1Op, TFL_AF_Relu1]] in
-  defm : FuseActFnIntoConvOpPat<actFnPair[0], actFnPair[1]>;
+//foreach actFnPair = [[TFL_ReluOp, TFL_AF_Relu],
+//                     [TFL_Relu6Op, TFL_AF_Relu6],
+//                     [TFL_Relu1Op, TFL_AF_Relu1]] in
+//  defm : FuseActFnIntoConvOpPat<actFnPair[0], actFnPair[1]>;
 
 
 class CanFuseConvOrDepthwiseConv<string is_depthwise> : Constraint<
@@ -320,21 +320,21 @@ multiclass FuseTileBroadcastIntoFollowingBinary<dag BinaryOp> {
 }
 
 // Multi-pattern consisting of matching stand-alone op or op followed by relu.
-multiclass FusedBinaryActivationFuncOpPat<dag BinaryOp> {
-  foreach actFnPair = [[TFL_ReluOp, TFL_AF_Relu],
-                       [TFL_Relu6Op, TFL_AF_Relu6],
-                       [TFL_Relu1Op, TFL_AF_Relu1]] in {
-    def : Pat<(actFnPair[0] (BinaryOp:$binary_out $lhs, $rhs, TFL_AF_None)),
-              (BinaryOp $lhs, $rhs, actFnPair[1]),
-              [(HasOneUse $binary_out)]>;
-  }
-}
+// multiclass FusedBinaryActivationFuncOpPat<dag BinaryOp> {
+//   foreach actFnPair = [[TFL_ReluOp, TFL_AF_Relu],
+//                        [TFL_Relu6Op, TFL_AF_Relu6],
+//                        [TFL_Relu1Op, TFL_AF_Relu1]] in {
+//     def : Pat<(actFnPair[0] (BinaryOp:$binary_out $lhs, $rhs, TFL_AF_None)),
+//               (BinaryOp $lhs, $rhs, actFnPair[1]),
+//               [(HasOneUse $binary_out)]>;
+//   }
+// }
 
 foreach BinaryOp = [TFL_AddOp, TFL_SubOp, TFL_DivOp, TFL_MulOp] in {
   defm : FuseTileBroadcastIntoFollowingBinary<BinaryOp>;
 
   // Instantiated FusedBinary patterns for the from-to pairs of ops.
-  defm : FusedBinaryActivationFuncOpPat<BinaryOp>;
+  // defm : FusedBinaryActivationFuncOpPat<BinaryOp>;
 
   // Move binary op before reshape: reshape -> binary => binary -> reshape.
   // This is valid only when the binary operand is constant and the shape is the

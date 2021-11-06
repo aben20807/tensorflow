@@ -345,10 +345,11 @@ struct FuseFullyConnectedAndReluX : public OpRewritePattern<ReluXOp> {
         rewriter.getStringAttr(fully_connected_op.weights_format());
     auto new_keep_num_dims =
         rewriter.getBoolAttr(fully_connected_op.keep_num_dims());
-    rewriter.replaceOpWithNewOp<FullyConnectedOp>(
-        relu_op, relu_op.getType(), fully_connected_op.input(),
-        fully_connected_op.filter(), fully_connected_op.bias(),
-        new_activation_func, new_weights_format, new_keep_num_dims);
+    // Disable fused_activation_function rewrite
+    // rewriter.replaceOpWithNewOp<FullyConnectedOp>(
+    //     relu_op, relu_op.getType(), fully_connected_op.input(),
+    //     fully_connected_op.filter(), fully_connected_op.bias(),
+    //     new_activation_func, new_weights_format, new_keep_num_dims);
 
     return success();
   }
